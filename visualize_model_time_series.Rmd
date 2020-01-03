@@ -1,0 +1,359 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# Goals
+1. Recognize simple Autocorrelation Functions (ACFs)
+2. Produce random walk and form moving averages for datasets
+
+# Contents
+1. [Datasets](#datasets)
+2. [Stationarity](#stationarity)
+3. [Autocovariance](#autocor)
+    a. [Routines in R](#routines-1)
+4. [Moving Average Process](#move-ave)
+    a. [Routines in R](#routines-2)
+
+### Packages
+
+astsa package contains data sets and scripts to accompany "Time series analysis and its applications: With R examples"
+
+https://cran.r-project.org/web/packages/astsa/astsa.pdf
+
+```{r}
+library(astsa)
+```
+
+```{r}
+help(astsa)
+```
+
+# Datasets{#datasets}
+
+Some time series data sets in astsa:
+- jj: joohnson and johnson quarterly earnings\
+- flu: flu deaths in teh US\
+- globtemp: land-ocean temperature deviations\
+- globatempl: land only temperature deviations\
+- star: magnitude of a star taken at midnight for 600 consecutive days\
+
+```{r}
+data(package="astsa")
+```
+
+```{r}
+help(jj)
+```
+
+Already a time series
+```{r}
+class(jj)
+```
+
+type='o': means every piont in teh time sereis will have a little circle on it
+
+```{r}
+plot(jj, type='o', main='Johnson&Johnson quarterly earnings per share',
+     ylab='Earnings', xlab='Years')
+```
+
+By just looking at this time plot, I would say there's some kind of **trend** throughout the years, there's an increase throughout the years. I can see the trend, but I can also see fluctuations, the **seasonal variations on that trend**. So there is a **seasonal effect** in this time series. 
+
+we will see that if we have a transitional affect or if you have a different variation in different parts of the time series -- it actually violates so-called stationary principle
+
+```{r}
+help(flu)
+class(flu)
+```
+
+```{r}
+plot(flu, main='Monthly flue deaths',ylab='Number of deaths per 10,000 people',
+     xlab='Months')
+```
+
+ In this time plot, we see that there is some kind of seasonality going on. There is a peak every after year or so. And that kind of shows that there is some kind of seasonality going on in this data which is definitely not a stationary time series
+ 
+```{r}
+help(globtemp)
+class(globtemp)
+```
+
+```{r}
+plot(globtemp, xlab="years", ylab="temp deviations", type='o')
+```
+
+Basically from this time plot my first impression is that there is some kind of trend. So temperature deviations are going up. And even though there is a trend, there's some kind of seasonality on that trend as well, probably, because of the seasons of the year. 
+
+```{r}
+help(globtempl)
+class(globtempl)
+```
+
+
+```{r}
+plot(globtempl)
+```
+
+
+```{r}
+help(star)
+class(star)
+```
+
+```{r}
+plot(star,ylab="magnitude",xlab='days')
+```
+
+the time plot definitely shows us there is some kind of seasonality going on. We can see some periodicity in this time plot.
+
+ 
+## Stationarity{#stationarity}
+In a (weak) stationary time series:\
+- No systematic change in mean (no trend)\
+- No systematic change in variation\
+- No periodic fluctuations\
+
+Stationary time series: The properties of one section of data are much like the properties of the other sections of the data
+
+For non-stationary time series, we can do some transformations to get stationary time series
+
+
+## Autocovariance{#autocor}
+
+### Routines in R:{#routines-1}
+
+Autocorrelation function\
+**acf()** give us all autocovariance coefficients\
+acf(time_series, type='covariance')
+
+**rnonm()** used for time series with no special pattern (purely random process)
+
+**diff()** used to get stationary time series from a random walk
+
+**stochastic process**: a sequence of random variables where each one of these random varibles might have their own distribution, own expectation, own variations.  
+
+the way to think about Stochastic process is to think of it versus deterministic process. In deterministic processes, for example, if you have seen the solution of ordinary differential equation you start with some point and the solution of the ODE will tell you exact trajectory so you know exactly where you're going to be the next time, next time step, next time step and so forth. The Stochastic process is basically opposite of that. At every step you have some randomness. You don't know exactly where you're going to be. But there are some distribution of X at that time stamp.
+
+if I know the stochastic process, if I know X1, X2, X3, and how it changes, then I can say something meaningful about my time series, but realize the following X1, X2, X3, and so forth, the stochastic process might come with ensemble of realizations, I mean, it might get its own ensemble of time series. But I only have one time series. By having only one time series, basically, one point at each time, you would like to say something meaningful about the stochastic process.
+
+$\gamma$ = our autocovariance function
+$\gamma_k$ = our autocovariance coefficient
+
+
+Gamma force will only depend on
+the time difference between these random variables. In other words, you don't look at, for example, random variable $x_t$ and random variable $x_t + k$. It doesn't matter what $t$ is. The time difference is $k$ and the time difference actually decides the nature, decides the fate of our autocovariance. And the reason is the following. We assume you're working with **stationary times series**. 
+
+Remember in a **stationary time series** we said the properties of the one part of the time series, is same as the properties of the other parts of the time series.
+
+but we usually do not have the stochastic process, **only a time series, which is just a realization of the stochastic process**. So we're going to use that to approximate $\gamma_k$ with $c_k$, which we will call the autocovariance coefficient.
+
+Now we're going to simulate a purely random process. It's a purely random process the time series with no special pattern. And we're going to use rnorm routine. We will call our time series purely_random_process, and we will use the ts routine, which will take the dataset that we generate and put time series structure on it. And inside that ts routine, I have rnorm routine. R stands for random, norm stands for normal random variables, so we will generate, let's say, 100 data points from normal distribution. In fact, it's going to generate 100 data points from standard normal distribution with a mean 0 and standard deviation 1. 
+
+```{r}
+purely_random_process=ts(rnorm(100))
+```
+
+
+```{r}
+print(purely_random_process)
+```
+
+
+```{r}
+plot(purely_random_process)
+```
+
+#### How to estimate the autocovariance coefficient of a time series using acf routine. 
+
+I'm going to put parenthesis around it so that it will print out the data that it produces, and you obtain the plot. 
+
+```{r}
+(acf(purely_random_process, type='covariance'))
+```
+Basically, this is autocorrelation coefficient estimation for our autocorrelation coefficient at lag 0. This is at lag 1, this is at lag 2, and this is at lag 3, and so forth.
+
+**Remember we assume weak stationarity**
+
+#### autocorrelation function acf() con't
+
+```{r}
+acf(purely_random_process, main='correlogram of purely random process')
+```
+
+I  have r0, which is 1, it always will start 1. Then later on, I do not have much correlation between all the different lags. Just because we generated these data as a purely random process, that you do not expect to see the correlation within different lags. These dash lines are basically showing the significance level. So this plot tells us that there are not much significant lags in the previous steps
+
+```{r}
+(acf(purely_random_process, main='correlogram of purely random process'))
+```
+
+## Random Walk
+
+```{r}
+x=NULL
+x[1]=0
+for(i in 2:1000){
+    x[i]=x[i-1]+rnorm(1)
+    }
+```
+
+```{r}
+class(x)
+```
+
+Make it a time series
+
+```{r}
+random_walk=ts(x)
+```
+
+
+```{r}
+class(random_walk)
+```
+
+```{r}
+plot(random_walk, ylab='', xlab='days',col='blue', lw=2)
+```
+
+Very typical looking plot for random walk.
+
+Now, random walk we just said, is not a stationary time series. It would not make sense to actually find acf of it, because acf, we define acf for stationary time series. But let's just do it because we can just do it. 
+
+```{r}
+acf(random_walk)
+```
+
+As you see, there's a high correlation, even 30 laps back, which just again shows that there is a high correlation in this data set and there is **no stationality**.
+
+**Removing the trend**
+
+This will give me difference of lag 1. So it's going to give me x2 minus x1, x3 minus x2, x4 minus x3...etc
+
+```{r}
+plot(diff(random_walk))
+```
+
+Looks like white noise
+
+
+```{r}
+acf(diff(random_walk))
+```
+
+gives an acf, which we have seen before. This is acf of the purely random process we generated a few lectures back.
+
+Shows how to get a stationary time series from a purely random process, provided by Random Walk, using difference operator.
+
+## Moving Average Process{#move-ave}
+
+### Routines in R:{#routines-2}
+
+**MA()** to identify moving average processes
+
+Now, you can think of MA(q) model. $q$ is the order of moving average model.
+
+```{r}
+# Generate noise
+noise=rnorm(10000)
+
+# Introduce a variable
+ma_2=NULL
+
+# Loop for generating MA(2) process
+
+for(i in 3:10000){
+    ma_2[i]=noise[i]+0.7*noise[i-1]+0.2*noise[i-2]
+}
+
+# Shift data to left by 2 units
+moving_average_process=ma_2[3:10000]
+
+# Put time series structure on a vanilla data
+moving_average_process=ts(moving_average_process)
+
+# Partition output graphics as a multi frame of 2 rows and 1 column
+#par(mfrow=c(2,1))
+
+# plot the process 
+plot(moving_average_process, main='A moving average process of order 2', ylab=' ', col='blue')
+
+```
+
+Without analyzing it, it would be impossible to tell this is actually moving average process. But here is the thing. I do have my ACF and ACF has some particular structure. 
+
+```{r}
+#  plot its ACF
+acf(moving_average_process, main='Correlogram of a moving average process of order 2')
+```
+
+I realize that I have a correlation at lag 0. This is always the case. It always starts ACF one but then there's a high correlation with lag one. This makes sense because we are still getting noises from the previous step. And there's also noise coming from the two steps back, two days back and then boom, there's nothing. So this is very, very much a characteristic of MAQ process if you are looking at MAQ process.
+
+# Exercise
+
+```{r}
+# Simulating a non-stationary time series
+
+# Set seed so thet we generate the same dataset
+set.seed(2017)
+# time variable 
+t=seq(0,1,1/100)
+# generate a time series
+some.time.series=2+3*t+ rnorm(length(t))
+
+# obtain acv for this time series below
+some.time.series=ts(some.time.series)
+(acf(some.time.series, type='covariance'))
+```
+
+
+
+
+```{r}
+# Simulating a non-stationary time series
+
+# Set seed so thet we generate the same dataset
+set.seed(2017)
+# time variable 
+t=seq(0,1,1/100)
+# generate a time series
+some.time.series=2+3*t+ rnorm(length(t))
+# obtain acf of the time series below
+some.time.series=ts(some.time.series)
+(acf(some.time.series))
+```
+
+```{r}
+# Simulating MA(4) process.
+# X_t= Z_t+0.2 Z_(t-1)+0.3 Z_(t-2)+ 0.4 Z_(t-3)
+
+set.seed(2^10)
+z=NULL
+z=rnorm(1000)
+data=NULL
+for(i in 4:1000){
+  data[i-3]=z[i]+0.2*z[i-1]+0.3*z[i-2]+0.4*z[i-3]
+  }
+data=ts(data)
+
+# find acf below
+(acf(data, lag.max=4, type='correlation'))
+```
+
+
+\
+\
+\
+\
+
+#### HINTS:
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
