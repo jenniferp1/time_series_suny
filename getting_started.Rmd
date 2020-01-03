@@ -1,0 +1,636 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+## Contents
+
+### Basic Descriptive Statistics with R
+1. [Using Packages in R](#rpackages)
+
+### [Descriptive Statistics](#basic-stats-desc)
+1. Numerical descriptions: 5 number summary, standard deviation
+2. Graphical Descriptions: histograms, time plots
+
+### [Inferential Statistics](#basic-stats-inf)
+1. Straight Line regression
+2. [Regression models and diagnostics](#reg-model)
+3. [T-tests](#T-tests)
+4. Correlation
+
+### Stationarity
+1. Strong
+2. Weak
+
+### Autocovariance and autocorrelation
+
+### Random Walks
+Moving Average Processes & Introduction to Simulation
+
+\
+\
+
+# Packages in R{#rpackages}
+
+In order to see what **data sets are in the package Faraway**, type 
+
+```{r}
+data(package='faraway')
+```
+
+ you can also see which
+**data sets come with base R** by typing data().
+
+```{r}
+data()
+```
+
+To use a data set obtained from an experiment where animals were fed a variety
+of diets. After they became accustomed to the diet, blood coagulation times were measured. 
+
+To **load the data**
+
+```{r}
+data(coagulation, package='faraway')
+```
+
+
+ If
+you type ls() again, you will see that coagulation is readily available. To see what this data set
+holds you need to inquire. Type coagulation just by itself to see the actual data values. You should
+see 24 rows of data (we call these cases) on your console:
+
+```{r}
+ls()
+```
+
+```{r}
+coagulation
+```
+
+each case has three variables associated with it: a case number (that is, which individual
+animal we are talking about), the coagulation times in seconds for this individual animal, and
+finally which diet the animal was on. 
+
+\
+
+use box plots to summarize and present data sets
+visually. Since we have 4 different diets, we would probably want to obtain a graphical
+representation “side by side” to see whether there are obvious differences. To obtain your box plot,
+type the following in the console window:
+
+```{r}
+plot( coag ~ diet, data=coagulation)
+```
+
+Unpacking this, R will plot “coagulation on diet” (with “coag ~ diet”). This groups according to
+diet on the horizontal and then boxplots the coagulation times on the vertical.
+
+Looking at the boxplot, it seems natural to ask whether the average coagulation times are
+independent of diet. This is a problem typically approached with ANOVA (Analysis of Variance).  If you type summary(coagulation) you obtain the
+output seen below. 
+
+```{r}
+summary(coagulation)
+```
+
+
+Note that this “bunches up” or aggregates the coagulation data into 24
+coagulation times and 24 diet types and tells useful information for each variable individually,
+rather than associating coagulation time with diet like the last plot. Since coag represents times, it
+is useful to know the “5 number summary” (i.e. the quartiles) as well as the average, or mean. Diet
+divides our cases into 4 groups, and you might want to know how many cases are in each group. 
+
+If you want to access each variable, you can use the operator “$” as in:
+```{r}
+coagulation$diet
+```
+
+```{r}
+coagulation$coag
+```
+
+Looking at regression:
+```{r}
+ourModel = lm(coag~diet-1, coagulation)
+summary(ourModel)
+```
+
+For now note, consistent with our box plots, the averages for each of the 4 diets are: 61, 66,
+68 and 61 seconds, respectively. (Recall, however, that a box plot shows the median, not the
+mean).
+
+### Exercise
+Load in the data set on poisons, treatments, and rats (effect of toxic agents on rats) with the
+command:
+```{r}
+data(rats, package='faraway')
+```
+
+```{r}
+ls()
+```
+We can find out about all of these data sets by downloading and reading through
+http://cran.r-project.org/web/packages/faraway/faraway.pdf
+
+**Description**:\
+An experiment was conducted as part of an investigation to combat the effects of certain toxic
+agents.
+
+
+```{r}
+colnames(rats)
+```
+
+- *time* survival time in tens of hours
+- *poison* the poison type - a factor with levels I II III
+- *treat* the treatment - a factor with levels A B C D
+
+
+Obtain box plots for survival times by poisons and for survival times on treatments. 
+
+```{r}
+plot(time~poison,data=rats)
+```
+
+
+```{r}
+plot(time~treat,data=rats)
+```
+
+In the faraway package, we have a data set named "worldcup" giving various R: data on players from the 2010 World Cup. The variable "Time" tells us the time played in minutes by the various players.
+
+After you have installed and loaded the faraway package, find the average time played
+
+```{r}
+data(worldcup, package='faraway')
+mean(worldcup$Time)
+```
+
+# Review of Basic Statistics (Descriptive) {#basic-stats-desc}
+
+**Concatenation and 5-number summary**
+
+Concatenation operator\
+data = {35, 8, 10, 23, 42}\
+c() for entering dataset in R\
+
+```{r}
+data.1=c(35, 8, 10, 23, 42)
+```
+
+```{r}
+data.1
+```
+
+```{r}
+print(data.1)
+```
+
+```{r}
+data.1=c(35, 8, 10,     23,     42)
+```
+
+```{r}
+print(data.1)
+```
+
+```{r}
+# five-number summary of a dataset
+summary(data.1)
+```
+
+```{r}
+mean(data.1)
+```
+
+```{r}
+median(data.1)
+```
+
+```{r}
+sum(data.1)/5
+```
+
+```{r}
+#sample standard deviation
+sd(data.1)
+```
+
+**Histograms**
+
+```{r}
+small.size.dataset=c(91,49,76,112,97,42,70, 100, 8, 112, 95, 90, 78, 62, 56, 94, 65, 58, 109, 70, 109, 91, 71, 76, 68, 62, 134, 57, 83, 66)
+```
+
+Basic histogram
+```{r}
+hist(small.size.dataset)
+```
+
+Change X axis label
+```{r}
+hist(small.size.dataset, xlab='My data points')
+```
+
+Change main plot title
+```{r}
+hist(small.size.dataset, xlab='My data points', main='Histogram of my data')
+```
+
+Change Y axis to density vs. frequency
+```{r}
+hist(small.size.dataset, xlab='My data points', main='Histogram of my data', freq=F)
+```
+
+Change column color
+```{r}
+hist(small.size.dataset, xlab='My data points', main='Histogram of my data', freq=F, col='green')
+```
+
+Impose smooth density function over histogram
+```{r}
+hist(small.size.dataset, xlab='My data points', main='Histogram of my data', freq=F, col='green')
+lines(density(small.size.dataset))
+```
+
+Change width and color of smooth density function
+```{r}
+hist(small.size.dataset, xlab='My data points', main='Histogram of my data', freq=F, col='green')
+lines(density(small.size.dataset), col='red', lwd=5)
+```
+
+Change bin width by changing break points
+```{r}
+hist(small.size.dataset, xlab='My data points', main='Histogram of my data', freq=F, col='green', breaks=10)
+```
+
+
+```{r}
+hist(small.size.dataset, xlab='My data points', main='Histogram of my data', freq=F, col='green', breaks=10)
+lines(density(small.size.dataset), col='red', lwd=5)
+```
+
+**Scatterplots**
+
+For bivariate data\
+Similated test scores
+```{r}
+set.seed(2016)  
+```
+
+Generate some data from normal distribution. Let's say 50 data points with average of 78. And with the standard deviation being 10.
+Then round to get whole numbers
+```{r}
+Test_1_scores=round(rnorm(50, 78, 10))
+```
+
+
+```{r}
+Test_2_scores=round(rnorm(50, 70, 14))
+```
+
+
+```{r}
+Test_1_scores 
+```
+
+
+```{r}
+Test_2_scores
+```
+
+
+```{r}
+plot(Test_2_scores~Test_1_scores)
+```
+
+Add titles and labels
+```{r}
+plot(Test_2_scores~Test_1_scores, main='Test scores for two exams (50 students)', xlab='Test_1_scores', ylab='Test 2 scores')
+```
+
+Change color
+```{r}
+plot(Test_2_scores~Test_1_scores, main='Test scores for two exams (50 students)', xlab='Test_1_scores', ylab='Test 2 scores', col='blue')
+```
+
+# Review of Basic Statistics (Inferential) {#basic-stats-inf}
+
+**Objectives**:\
+Perform a simple linear regression with R\
+- plot time series data\
+- fit a linear model to a set of ordered pairs\
+- assess normality of residuals\
+- test whether the slope of the fitted line is zero\
+
+**When R starts it has a number of packages already loaded. This data set should be available to you just by typing the data set name, at the R command console**
+
+```{r}
+data()
+```
+
+We will use the dataset CO2 -- atmospheric carbon dioxide concentration during some of the last several decades. 
+```{r}
+co2
+```
+
+To obtain a description
+```{r}
+help(co2)
+```
+
+verify that co2 is as time series object
+```{r}
+class(co2)
+```
+
+
+```{r}
+plot(co2, main='Atmospheric CO2 Concentration')
+```
+
+CO2 concentration is apparently increasing with time over this period. Also, even though a
+straight line obviously misses some crucial behavior it isn’t entirely useless in that it can be used
+to model the **trend** in the data.
+
+We’ll follow the standard notational conventions and make a few minimal assumptions.
+- The response (i.e. co2 concentration) of the $i^{th}$ observation may be denoted by the random variable $Y_i$.\
+- This response depends upon the explanatory variable $x_i$
+in a linear way, with some noise
+added, as\
+$Y_i$ = *linear model plus noise* = $(\beta_0 + \beta_1x_i) + \epsilon_i$
+
+The error term $\epsilon_i$ can can arise in a variety of ways: \
+measurement error, lack of knowledge of other
+important influences, etc. When doing a simple regression model, we make the (often
+reasonable!) assumptions that\
+a) the errors are normally distributed $(N(\mu=0, \sigma^=$*constant*$))$ and, on average, zero;\
+b) the errors all have the same variance (they are homoscedastic), and\
+c) the errors are unrelated to each other (they are independent across observations). \
+
+When
+we find estimates of the slope and intercept using, for example Ordinary Least Squares (OLS),
+we are not really making any distributional assumptions, just taking a cloud of points and finding
+numbers that we call a slope and an intercept that minimize a quality term like
+$$Q=\Sigma(observed-predicted)^2$$
+$Q$ is an aggregate error.  The idea behind ordinary least squares (regression) is that we'll make this aggregate error as small as maethmatically possible.
+
+The observed value is what you have measured, the predicted value is sitting on your straight
+line. A common notation would be 
+
+$Y_i = i^{th}$ *observed response variable*\
+
+$\hat{Y}_i = i^{th}$*predicted response variable = slope* $\cdot x_i +$ *intercept*\
+
+We can calculate the slope and intercept values follows. First, to get the
+concentrations and times they were collected available to compute with,
+
+with a bit of knowledge of Calculus...
+```{r}
+co2.values = as.numeric(co2)
+co2.times = as.numeric( time(co2) )
+SSxx = sum( (co2.times - mean(co2.times) ) * (co2.times - mean(co2.times) ) )
+SSxy = sum( (co2.values - mean(co2.values) ) * (co2.times - mean(co2.times) ) )
+```
+
+```{r}
+slope = SSxy / SSxx 
+slope
+```
+
+
+```{r}
+intercept = mean(co2.values) - slope*mean(co2.times) 
+intercept
+```
+
+We can create a linear model a little more simply with the command in R
+
+where lm = the linear model command and co2 can be thought of as the response together with time.  In order to extract the time part we'll use the comman *time*.
+
+```{r}
+co2.linear.model = lm(co2 ~ time(co2) )
+
+plot(co2, main='Atmospheric CO2 Concentration with Fitted Line')
+abline(co2.linear.model )
+```
+
+```{r}
+coef(co2.linear.model)
+```
+
+```{r}
+summary(co2.linear.model)
+```
+
+
+To add rsme, slope, intercept, r^2 to the plot, do the following
+```{r}
+## Calculate RMSE and other values
+rmse <- round(sqrt(mean(resid(co2.linear.model)^2)), 2)
+coefs <- coef(co2.linear.model)
+b0 <- round(coefs[1], 2)
+b1 <- round(coefs[2],2)
+r2 <- round(summary(co2.linear.model)$r.squared, 2)
+```
+
+```{r}
+eqn <- bquote(italic(y) == .(b0) + .(b1)*italic(x) * "," ~~ 
+                  r^2 == .(r2) * "," ~~ RMSE == .(rmse))
+eqn
+```
+
+```{r}
+## Plot the data
+plot(co2, main='Atmospheric CO2 Concentration with Fitted Line')
+abline(co2.linear.model )
+text(1958, 360, eqn, pos = 4)
+```
+
+Now take the intercept value with a little bit of caution. We're not saying that at time zero, the intercept, the carbon dioxide concentration would be ~ -2000. That's sort of a meaningless thing to say. But given our dataset, the best intercept for that cloud, that scatterplot, really would be -2000. We will not extrapolate back that far. Our model utility would have broken down long before then.
+
+**Assessing the normality of a data set**
+
+For residuals, "interrogate" the linear model with
+```{r}
+co2.residuals = resid( co2.linear.model )
+```
+
+Do you believe that the residuals are normally distributed? When we have a large data set we can
+look at a histogram. When a data set is smaller, we can look at a normal probability plot. 
+
+Using the par() command to see these plots together, we can see a systematic departure from
+normality in the tails, along with an obvious structure in the time plot indicating departures from
+the standard regression assumptions. 
+
+```{r}
+par(mfrow=c(1,3))
+invisible(( c02.residuals = resid( co2.linear.model ) ) )
+hist(co2.residuals, main= "Histogram of CO2 Residuals")
+qqnorm(c02.residuals, main= "Normal Probability Plot")
+qqline(c02.residuals)
+plot(c02.residuals ~ time(co2), main="Residuals on Time")
+```
+
+zoom in on the residuals using the “xlim” argument to see the
+seasonality in the data set. We will address the oscillations in the data later
+```{r}
+plot(c02.residuals ~ time(co2), xlim=c(1960, 1963), main="Zoomed in Residuals on Time")
+```
+Zooming in shows oscillatory nature of our data
+
+**Another dataset -- sleep**
+
+```{r}
+help(sleep)
+```
+
+
+```{r}
+class(sleep)
+```
+
+
+```{r}
+head(sleep)
+```
+
+Plot your data with the command
+
+```{r}
+plot(extra~group, data=sleep, main = "Extra Sleep in Gossett Data by Group")
+```
+
+In box plot -- media extra sleep seems higher in group 2 (from visual inspection)
+
+~~
+
+If you are tired of typing the dollar sign to access a variable, you can “attach” the data frame as
+
+```{r}
+attach(sleep)
+```
+
+Now we can access the variables with a little less typing. Disaggregating the extra sleep data into
+variables specifying those who took drug 1 and those who took drug 2 
+```{r}
+extra.1=extra[group==1]
+extra.2=extra[group==2]
+```
+
+An obvious research question would be: Is there a difference in the average response to each of
+the two drugs?\
+
+## T-test{#T-tests}
+
+Run your t-test with the command
+```{r}
+t.test(extra.1, extra.2, paired=TRUE, alternative="two.sided")
+```
+
+The rather large negative t-value leads us to believe that the visual evidence in the box plot is
+supported by the statistical approach. The p-value is quite small and our data are significant at
+the customary 𝛼 = 0.01 level. 
+
+$$p < \alpha \Rightarrow reject$$
+$$p > \alpha \Rightarrow do.not.reject$$
+An interval estimate provides a quality statement and is more interesting than the
+point estimate of 𝑥̅− 𝑦̅ = −1.58. At the 95% level of confidence we make the traditional
+statement that, whatever the actual difference in means, our interval estimate is 
+$$-2.4598858 < \mu_d<-0.7001142$$
+
+for the test to be meaningful, we assume that the population of differences is normally distributed. 
+
+```{r}
+diffs = extra.1-extra.2
+qqnorm(diffs, main= "Normal Probability Plot")
+qqline(diffs)
+```
+
+While this is not a very sensitive test for normality, the hypothesis test itself is robust to
+departures from normality and, while that outlier is somewhat troubling, we can move forward. 
+
+## A Regression Model{#reg-model}
+
+Since the data are paired (two different responses by
+same subject to each drug), it is natural to think of them in an (𝑥, 𝑦) fashion and plot our data in
+a scatter plot
+
+```{r}
+plot(extra.2~extra.1, xlab='extra sleep with drug 1', ylab='extra sleep with drug 2', main='Extra Sleep Drug 2 against Extra Sleep Drug 1')
+sleep.linear.model = lm(extra.2 ~ extra.1 )
+abline(sleep.linear.model)
+```
+
+We have changed our focus from (a) deciding whether the group averages differ to (b) thinking
+about whether we might say something about a person’s response to the second drug given their
+response to the first drug. Aside from the one pesky data point (subject 9) it looks like we might
+be able to do a decent job.
+So, in this context we might think about performing a regression of 𝑑𝑟𝑢𝑔2 response on 𝑑𝑟𝑢𝑔1
+response. 
+
+Once again, here is the normal probability plot for the
+residuals. We still have that one annoying data point.
+
+```{r}
+diffs = extra.1-extra.2
+qqnorm(diffs, main= "Normal Probability Plot")
+qqline(diffs)
+```
+
+
+```{r}
+summary(sleep.linear.model)
+```
+
+Our model is then
+
+$$extra.2 = 0.8899 \cdot extra.1 + 1.6625$$
+On the standard test of whether the slope is zero, our p-value is 0.00596 < .01 and so we believe
+the slope is not zero 
+
+What is the residual associated with the 3rd data point?
+
+```{r}
+residuals = resid(sleep.linear.model)
+residuals[3]
+```
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+\
+\
+\
+\
+\
+
+#### HINTS:
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
