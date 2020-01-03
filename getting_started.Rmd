@@ -16,7 +16,7 @@ output: html_notebook
 1. Straight Line regression
 2. [Regression models and diagnostics](#reg-model)
 3. [T-tests](#T-tests)
-4. Correlation
+4. [Correlation](#correlation)
 
 ### Stationarity
 1. Strong
@@ -405,7 +405,7 @@ intercept = mean(co2.values) - slope*mean(co2.times)
 intercept
 ```
 
-We can create a linear model a little more simply with the command in R
+Or we can create a linear model a little more simply with the command in R
 
 where lm = the linear model command and co2 can be thought of as the response together with time.  In order to extract the time part we'll use the comman *time*.
 
@@ -415,6 +415,15 @@ co2.linear.model = lm(co2 ~ time(co2) )
 plot(co2, main='Atmospheric CO2 Concentration with Fitted Line')
 abline(co2.linear.model )
 ```
+
+```{r}
+str(co2.linear.model)
+```
+
+```{r}
+ls(co2.linear.model)
+```
+
 
 ```{r}
 coef(co2.linear.model)
@@ -597,13 +606,65 @@ residuals = resid(sleep.linear.model)
 residuals[3]
 ```
 
+## Correlation{#correlation}
+
+One of the most important tools in time series analysis is the **Auto-Correlation Function**, or **ACF**. 
+
+Below we overview required concepts by looking at a very popular way to
+measure the strength of linear association between two variables, the correlation coefficient.
+
+Girth, Height and Volume for Black Cherry Trees
+
+This data set provides measurements of the girth, height and volume of timber in 31 felled
+black cherry trees. Note that girth is the diameter of the tree (in inches) measured at 4 ft 6
+in above the ground. 
+
 ```{r}
+help(trees)
 ```
 
 
 ```{r}
+class(trees)
 ```
 
+
+```{r}
+head(trees)
+```
+
+It’s always natural to take a look at our data and we’ll do so with a “pairs” plot.
+
+```{r}
+pairs(trees, pch = 21, bg = c("red"))
+```
+
+
+It appears that our variables are all positively correlated, as we’d expect. The linear relationship
+between Girth and Volume seems especially strong. 
+
+Covariance measures how much two random variables vary together.  But it does not tell exactly how strong that relationship is... that's where correlation coefficients come in....
+
+```{r}
+cov(trees)
+```
+
+....The problem with covariance can be fixed by dividing the covariance by the standard deviation to get the correlation coefficient.
+
+Correlation coefficient (covariance in standard units)
+
+```{r}
+cor(trees)
+```
+
+Advantages of the Correlation Coefficient
+
+The Correlation Coefficient has several advantages over covariance for determining strengths of relationships:
+
+- Covariance can take on practically any number while a correlation is limited: -1 to +1.\
+- Because of it’s numerical limitations, correlation is more useful for determining how strong the relationship is between the two variables.\
+- Correlation does not have units. Covariance always has units.\
+- Correlation isn’t affected by changes in the center (i.e. mean) or scale of the variables.
 
 ```{r}
 ```
