@@ -1,0 +1,312 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# Contents
+1. [Stationarity](#stationarity)
+2. [Backshift Operator applied to MA(q) and AR(p) processes](#backshift)
+3. [AR(p) processes](#ar)
+4. [Intro to Yule-Walker equations](#yulewalker)
+
+
+```{r}
+plot(cars)
+```
+
+# Stationarity{#stationarity}
+
+- homoscedasticity: constant variance
+
+- *stochastic processes* are really just random processes.
+
+- A *discrete stochastic* process is a family of random variables structured as a sequence (finite or infinite) and has a discrete time index, denoted $X_t$. Discrete stochastic processes may model, for instance, the recorded daily high temperatures in Melbourne, Australia.
+
+- A *continuous stochastic* process is also a family of random variables, but is indexed by a continuous variable and denoted as $X(t)$. A commonly encountered continuous process is the Weiner Process, describing a particle’s position as a function of time as it floats on the surface of a liquid (Brownian Motion).
+
+When we acquire time series data in the field, we don’t usually have the luxury of observing multiple trajectories.
+
+> We usually just have one sequentially observed data set and must infer the properties of the generating process from this single trajectory.
+
+The usual terminology here is that an *individual trajectory* corresponds to a *realization* of a stochastic process. This is what we have been calling a time series. 
+
+The *set of all possible trajectories* is called the *ensemble*.
+
+> A stochastic process is a rather complicated thing. To fully specify its structure we would need to know the joint distribution of the full set of random variables.
+
+### Mean, Variance, and Autocovariance
+
+Mean:\
+$$\mu(t)=\mu_t=E[X(t)]$$
+Variance:\
+$$\sigma^2(t) = \sigma^2_t = V[X(t)]$$
+
+We also care about how the random variables relate to one another. 
+
+$$\gamma(t_1,t_2)=E[(X(t_1)-\mu(t_1))(X(t_2)-\mu(t_2))]$$
+
+All of these functions; the mean, the variance, and the covariance functions depend upon the particular random variables we are considering (indexed by time).
+
+#### Strict Stationarity
+
+- *strict stationarity*:  essentially says that the joint distribution doesn’t really depend upon where you are looking along the stochastic process. 
+so the distribution of $X(t_1)$ is the same as $X(t_1 + \tau)$
+
+Now since each random variable 𝑋(𝑡) has the same distribution, our two functions (mean and variance) must be constant and we can say 
+
+Mean:\
+$$\mu(t)=\mu$$
+Variance:\
+$$\sigma^2(t)=\sigma^2$$
+
+Let $k=2$.  The joint distribution depends only on the lag spacing (not on time) so
+Autocovariance:\
+$$\gamma(t_1,t_2)=\gamma(t_2-t_1)=\gamma(\tau)$$
+It doesn’t matter where you are sitting along the process, we just care about the distance between
+the random variables. Strict stationarity is a very strong condition, but it gives us
+some extremely simplifying results.  It is also hard to determine.  A weaker assumption is weak stationarity.
+
+
+#### Weak (second-order) Stationarity
+A less burdensome condition we can impose which will still allow us to “pool” our results
+across a realization in order to infer properties of the ensemble. 
+
+ a process is weakly stationary if 
+ 
+ $$\mu(t)=\mu$$
+ 
+ $$\gamma(t_1,t_2)=\gamma(t_2-t_1)=\gamma(\tau)$$
+
+Let the lag = 0 $\Rightarrow$ Implication: Constant variance.  So much easier (than strict stationarity) but still useful.
+
+### Examples
+
+* White noise is Stationary!  mean = 0 and constant variance.
+
+* Random Walks are NOT Stationary!
+
+* Moving Average Processes are Stationary!
+
+The code below helps develop intuition into MA processes. Don't worry too much about the commands at this point. Just try to internalize the differences between white noise (first plot) and third and fifth order moving average processes.
+
+```{r}
+
+par( mfrow=c(3,1) );
+plot( arima.sim(n=150, list(order=c(0,0,0) )  ), main="WN" );
+plot( arima.sim(n=150, list(ma=c(0.33, 0.33, 0.33)      )  ) , main="MA3");
+plot( arima.sim(n=150, list(ma=c(0.2, 0.2, 0.2, 0.2, 0.2) )  ), main="MA5" );
+
+```
+
+Notice: White noise should be the least smooth of the three plots, followed by MA3. Our MA5 should be the smoothest.
+
+When going to higher Q (e.g., Q=9), we induce longer scale correlations, relationships between neighbors. We're smoothing even more, which makes sense. We're including more numbers in our average.
+
+More formulas:
+
+Suppose you have the MA(2):
+
+$$X_t = Z_t + .5Z_{t-1} + .5Z_{t-2}, \sigma^2 = 1$$
+How many terms in the ACF are nonzero?\
+Use
+$\gamma(k) = \Sigma^{2-k}_{i=0} \beta_i \beta_{i+k}$ \
+and\
+$\rho(k) = \frac{\gamma(k)}{\gamma(0)}$
+to get 3 non-zero terms
+
+To calcualte the autocovariance at lag zero:\
+$\gamma(0) = \Sigma^{2-0}_{i=0} \beta_i \beta_{i+0} = \beta_0 \beta_0 + \beta_1 \beta_1 + \beta_2 \beta_2 = 1^2 + .5^2 +.5^2 = 1.5$
+
+To calculate teh autocorrelation function at lag 2:\
+$\gamma(2) = \Sigma^{2-2}_{i=0} \beta_i \beta_{i+2} = 1 \cdot 0.5 = 0.5$\
+$\rho(2) = \frac{\gamma(2)}{\gamma(0)} = 0.5/1.5 = 0.33333$
+
+Reference:\
+[Moving Average Process MA(q)](./notes/TS_Chapter4MovingAverages_3&4.pdf)
+
+```{r}
+set.seed=1
+(acf(arima.sim(n=1000, model=list(ma=c(.5,.5)))))
+```
+
+
+# Backshift Operator applied to MA(q) and AR(p) processes{#backshift}
+
+See video lectures.
+
+Convergence of geometric series
+
+$$\Sigma^\infty_{n=1}ar^{n-1} = a(1+r+r^2+r^3+...)$$
+convergent if $|r|<1$ and divergent if $|r| \geq 1$
+
+if convergent sum = $\frac{a}{1-r}$
+
+Reference:
+[Convergence of a geometric sereis](https://www.youtube.com/watch?v=LhO7i3RFri0)
+
+http://www-stat.wharton.upenn.edu/~stine/stat910/rcode/03.R
+
+# AR(p) processes{#ar}
+
+An [autoregressive (AR) model](https://otexts.com/fpp2/AR.html) **predicts future behavior based on past behavior**. It’s used for forecasting when there is some correlation between values in a time series and the values that precede and succeed them. You only use past data to model the behavior, hence the name autoregressive (the Greek prefix auto– means “self.” ). The process is basically a linear regression of the data in the current series against one or more past values in the same series.
+
+The AR process is an example of a stochastic process, which have degrees of uncertainty or randomness built in. The randomness means that you might be able to predict future trends pretty well with past data, but you’re never going to get 100 percent accuracy. Usually, the process gets “close enough” for it to be useful in most scenarios.
+
+AR models are also called conditional models, Markov models, or transition models.
+
+An $AR(p)$ model is an autoregressive model where specific lagged values of $y_t$ are used as predictor variables. *Lags* are where results from one time period affect following periods.
+
+**The value for “$p$” is called the order**. For example, an $AR(1)$ would be a “first order autoregressive process.” The outcome variable in a first order AR process at some point in time $t$ is related only to time periods that are one period apart (i.e. the value of the variable at $t – 1$). A second or third order AR process would be related to data two or three periods apart.
+
+[Real World Examples](https://www.investopedia.com/terms/a/autoregressive.asp)
+
+### Simulating a simple AR(p) Process: First Order 
+
+We can very easily simulate an AR(p=1) process. (Our “history” just consists of the
+immediately previous state, so p=1). The first simulation will have 𝜙 = 0.4.
+
+```{r}
+set.seed(2016); N=1000; phi = .4;
+Z = rnorm(N,0,1); X=NULL; X[1] = Z[1];
+for (t in 2:N) {
+X[t] = Z[t] + phi*X[t-1] ;
+}
+X.ts = ts(X)
+par(mfrow=c(2,1))
+plot(X.ts,main="AR(1) Time Series on White Noise, phi=.4")
+X.acf = acf(X.ts, main="AR(1) Time Series on White Noise, phi=.4")
+
+```
+
+It looks  like the first two or three lag spacings have a significant value. What happens when
+we set 𝜙 = 1? 
+
+This will give us a simple random walk.
+
+```{r}
+set.seed(2016); N=1000; phi = 1;
+Z = rnorm(N,0,1); X=NULL; X[1] = Z[1];
+for (t in 2:N) {
+X[t] = Z[t] + phi*X[t-1] ;
+}
+X.ts = ts(X)
+par(mfrow=c(2,1))
+plot(X.ts,main="AR(1) Time Series on White Noise, phi=1")
+X.acf = acf(X.ts, main="AR(1) Time Series on White Noise, phi=1")
+```
+
+
+Let’s add additional terms in our AR(p) simulation. We can take advantage of a routine called
+arima.sim() from the stats package.
+
+```{r}
+set.seed(2017)
+X.ts <- arima.sim(list(ar = c(.7, .2)), n=1000)
+par(mfrow=c(2,1))
+plot(X.ts,main="AR(2) Time Series, phi1=.7, phi2=.2")
+X.acf = acf(X.ts, main="Autocorrelation of AR(2) Time Series")
+```
+
+conditions for stationarity 
+
+−1 < 𝜙2 < 1\
+𝜙2 < 1 + 𝜙1\
+𝜙2 < 1 − 𝜙1\
+
+ as a little plotting tip, we can include our parameter values in the plot title
+if we use the paste() command. Then we don’t have to keep setting values throughout the script:
+
+```{r}
+phi1 = .5
+phi2 = -.4
+X.ts <- arima.sim(list(ar = c(phi1 , phi2)), n=1000)
+par(mfrow=c(2,1))
+plot(X.ts,main=paste("AR(2) Time Series, phi1=",phi1, "phi2=", phi2))
+X.acf = acf(X.ts, main="Autocorrelation of AR(2) Time Series")
+```
+
+### Exercise:\
+Run the code below with phi=.1. Then change the code to phi=.9 and run again. In which graph is the drop off in the ACF faster? That is, in which graph do we have a more rapid decay in autocorrelation?
+
+```{r}
+phi1 = .1;
+X.ts <- arima.sim(list(ar = c(phi1)), n=1000)
+par(mfrow=c(2,1))
+plot(X.ts,main=paste("AR(1) Time Series, phi1=",phi1))
+X.acf = acf(X.ts, main="Autocorrelation of AR(1) Time Series")
+```
+
+
+```{r}
+phi1 = .9;
+X.ts <- arima.sim(list(ar = c(phi1)), n=1000)
+par(mfrow=c(2,1))
+plot(X.ts,main=paste("AR(1) Time Series, phi1=",phi1))
+X.acf = acf(X.ts, main="Autocorrelation of AR(1) Time Series")
+```
+
+Have a little fun with the code below and run for various values of phi1 and phi2. Note that arima.sim() likes you to simulate stationary processes, so be careful with your coefficients.
+
+```{r}
+par(mfrow=c(2,1))
+
+phi1 = .4; phi2 = .3;
+X.ts <- arima.sim(list(ar = c(phi1, phi2)), n=1000)
+plot(X.ts,main=paste("AR(2) Time Series, phi1=",phi1,"phi2=",phi2))
+acf(X.ts,main="ACF")
+```
+
+From above\
+Recall that we wrote the code:
+
+> set.seed(2016); N=1000; phi = .4;\
+Z = rnorm(N,0,1)\
+X=NULL;\
+X[1] = Z[1];\
+for (t in 2:N) {\
+        X[t] = Z[t] + phi*X[t-1] ;\
+}\
+X.ts = ts(X)\
+X.acf = acf(X.ts)\
+
+A quick call to (r.coef = X.acf\$acf) tells me $r_i$
+
+```{r}
+set.seed(2016)
+N=1000
+phi = .4
+Z = rnorm(N,0,1)
+X=NULL
+X[1] = Z[1]
+for (t in 2:N) {
+X[t] = Z[t] + phi*X[t-1] 
+}
+X.ts = ts(X)
+X.acf = acf(X.ts)
+r.coef = X.acf$acf
+```
+
+```{r}
+r.coef[1:4]
+```
+
+
+# Intro to Yule-Walker equations{#yulewalker}
+
+See video lectures.
+
+\
+\
+\
+\
+
+#### Hints:
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
