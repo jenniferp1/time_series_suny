@@ -1,0 +1,173 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# Contents
+1. [PACF to estimate the order of AR(p) processes](#pacf)
+2. [Yule-Walker revisited](#yule-walker)
+3. [AR processes - Examples](#examples)
+
+
+
+## PACF to estimate the order of AR(p) processes{#pacf}
+
+> A moving average process of order q has an ACF that cuts off after q lags.
+
+So, if you have an MA() process with enough terms that you believe the ACF is well estimated, and the ACF cuts off after 4 lags, you can be reasonably sure you have an MA(4) process.
+How about an AR(p) process? That is, if you know you have an AR(p) process, can you tell what the order of the process is? 
+
+We will see that the Partial Autocorrelation Function, or PACF
+will help us to find the order of an AR(p) process. 
+
+First, let’s create some data and look at some pictures.
+
+```{r}
+rm( list=ls( all = TRUE ) )
+par(mfrow=c(3,1))
+phi.1 = .6; phi.2 = .2
+data.ts = arima.sim(n = 500, list(ar = c(phi.1, phi.2)))
+plot(data.ts, main = paste("Autoregressive Process with phi1=",phi.1," phi2=",phi.2) )
+acf(data.ts, main="Autocorrelation Function")
+acf(data.ts, type="partial", main="Partial Autocorrelation Function")
+```
+
+if you run the code several times. You will observe that, while the actual time series itself changes from simulation to simulation, the ACF and PACF are relatively constant. 
+
+```{r}
+rm( list=ls( all = TRUE ) )
+par(mfrow=c(3,1))
+phi.1 = .9; phi.2 = -.6; phi.3 = .3
+data.ts = arima.sim(n = 500, list(ar = c(phi.1, phi.2, phi.3)))
+plot(data.ts, main = paste("Autoregressive Process with phi1=", phi.1," phi2=",phi.2," phi3=",phi.3) )
+acf(data.ts, main="Autocorrelation Function")
+acf(data.ts, type="partial", main="Partial Autocorrelation Function")
+```
+
+```{r}
+phi.1 = .9; phi.2 = -.6;
+par(mfrow=c(3,1))
+data.ts = arima.sim(n = 500, list(ar = c(phi.1, phi.2)))
+plot(data.ts, 
+main = 
+paste("Autoregressive Process with phi1=", phi.1," phi2=",phi.2 ) ) 
+acf(data.ts)
+acf(data.ts, type="partial")
+```
+
+
+#### Partial Autocorrelation Function and the Beveridge Wheat Price Data Set 
+(https://www.qlik.com/us/products/qlik-data-market?q=provider:tsdl)
+
+```{r}
+library(tseries)
+```
+
+```{r}
+data(package="tseries")
+```
+
+```{r}
+data(bev, package="tseries")
+```
+
+```{r}
+ls()
+```
+
+```{r}
+help(bev)
+```
+
+```{r}
+class(bev)
+```
+
+Create a “filter” with the simple moving average that uses 15
+data points on either side of a given year to introduce some smoothing. Then plot the original series and the smoothed series on the same axes.
+```{r}
+beveridge.ts = bev
+plot( beveridge.ts, ylab="price", main="Beveridge Wheat Price Data")
+beveridge.MA = filter(beveridge.ts, rep(1/31, 31), sides = 2)
+lines(beveridge.MA, col="red")
+```
+
+transformed data by scaling each data point by its corresponding smoothed
+value. 
+
+The acf() function doesn’t like missing data, so the first and last 15 numbers are ignored or omitted
+with the clean-up function na.omit(). 
+
+```{r}
+par(mfrow=c(3,1))
+Y = beveridge.ts/beveridge.MA
+plot( Y, ylab="scaled price", main="Transformed Beveridge Wheat Price Data")
+acf(na.omit(Y),
+main="Autocorrelation Function of Transformed Beveridge Data")
+acf(na.omit(Y), type="partial",
+main="Partial Autocorrelation Function of Transformed Beveridge Data")
+```
+
+We will use the routine ar() to estimate the coefficients of our model. If we will allow up to 5 terms in our model (a reasonable number) we call
+
+```{r}
+ar(na.omit(Y), order.max = 5)
+```
+
+Just to state the obvious at this point:
+
+> An autoregressive process of order p, an AR(p), has a PACF that cuts off after p lags.
+
+we define a partial autocorrelation function
+$𝜙_{ℎℎ} ≡ 𝑐𝑜𝑟𝑟[𝑥_{𝑡+ℎ} − 𝑥̂_{𝑡+ℎ}, 𝑥_{𝑡} − 𝑥̂_{𝑡}]$
+
+The paritial correlation coefficient is 
+$𝑐𝑜𝑟𝑟[𝑥_{𝑡+ℎ} − 𝑥̂_{𝑡+ℎ}, 𝑥_{𝑡} − 𝑥̂_{𝑡}]$
+
+We can calculate (estimate, really) these quantities from a given time series and have another plot
+to use in our quest to understand the stochastic process that generated the data at hand. We will
+plot the Partial Auto Correlation Function (PACF). The call in R is simple, we just give an
+argument to the acf() routine.
+
+> acf(ts, type="partial")
+
+
+```{r}
+phi.1 = .6;
+phi.2 = -.6;
+data.ts = arima.sim(n = 1000, list(ar = c(phi.1, phi.2)))
+acf(data.ts, type="partial",
+main=paste("PACF of Time Series Data, phi1=",phi.1,", phi.2=",phi.2) )
+```
+
+The excess correlation at 𝑙𝑎𝑔 = 𝑘 not accounted for by a (𝑘 − 1)𝑠𝑡 order model, is the
+partial correlation at lag=k
+
+
+## Yule-Walker revisited{#yule-walker}
+
+```{r}
+
+```
+
+
+## AR processes - Examples{#examples}
+
+
+
+
+\
+\
+\
+\
+
+#### Hints:
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
